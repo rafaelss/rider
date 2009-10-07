@@ -1,3 +1,5 @@
+require 'hpricot'
+
 module Rider
   class Crawler
     # Creates a new Crawler, with the specified +mask+ (a Regexp) and queue (a +Rider::Queue+ instance).
@@ -5,7 +7,10 @@ module Rider
       @mask = mask
       @queue = queue
       @seen_urls = []
-      @www = WWW::Mechanize.new { |a| a.log = Logger.new("tmp/www.log") }
+      @www = WWW::Mechanize.new do |a|
+        a.log = Logger.new("tmp/www.log")
+        a.pluggable_parser.default = Hpricot
+      end
     end
     
     # Returns true if +url+ passes the +mask+.
@@ -72,7 +77,7 @@ module Rider
     def get_http(uri)
       page = @www.get(uri)
       meta = page.response
-      [uri, meta, page.body]
+      [uri, meta, page]
     end
     
     # Retrieves the next URL in the queue that matches the +mask+.
